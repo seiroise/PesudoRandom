@@ -1,6 +1,6 @@
 #if defined(UNITY_PROCEDURAL_INSTANCING_ENABLED)
 StructuredBuffer<uint> _Hashes;
-StructuredBuffer<float3> _Positions;
+StructuredBuffer<float3> _Positions, _Normals;
 #endif
 
 float4 _Config;
@@ -8,18 +8,15 @@ float4 _Config;
 void ConfigureProcedural()
 {
 #if defined(UNITY_PROCEDURAL_INSTANCING_ENABLED)
-	// 全体で-0.5,+0.5の範囲に収まるように行列の内容を更新する
-	// 誤差の関係でfloorをすると1に丸まってほしいものが0になってしまうことがあるので、小さなバイアスを加える。
-	//float v = floor(_Config.y * unity_InstanceID + 0.000001);
-	//float u = unity_InstanceID - _Config.x * v;
-
 	unity_ObjectToWorld = 0.0;
 	// 平行移動
 	unity_ObjectToWorld._m03_m13_m23_m33 = float4(
 		_Positions[unity_InstanceID],
 		1.0
 	);
-	unity_ObjectToWorld._m13 += _Config.z * ((1.0 / 255.0) * (_Hashes[unity_InstanceID] >> 24) - 0.5);
+	unity_ObjectToWorld._m03_m13_m23 += 
+		(_Config.z * ((1.0 / 255.0) * (_Hashes[unity_InstanceID] >> 24) - 0.5)) *
+		_Normals[unity_InstanceID];
 	// 拡大縮小
 	unity_ObjectToWorld._m00_m11_m22 = _Config.y;
 #endif
