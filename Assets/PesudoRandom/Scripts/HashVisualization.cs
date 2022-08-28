@@ -1,9 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
-using UnityEngine;
+using Unity.Mathematics;
+
+using static Unity.Mathematics.math;
 
 public class HashVisualization : MonoBehaviour
 {
@@ -12,15 +15,27 @@ public class HashVisualization : MonoBehaviour
 	{
 		[WriteOnly]
 		public NativeArray<uint> hashes;
+		[ReadOnly]
+		public NativeArray<float3> positions;
+
+		public SmallXXHash hash;
+		public float3x4 domainTRS;
 
 		public void Execute(int i)
 		{
-			hashes[i] = (uint)i;
+			float3 p = mul(domainTRS, float4(positions[i], 1));
+
+			int u = (int)floor(p.x);
+			int v = (int)floor(p.y);
+			int w = (int)floor(p.z);
+
+			hashes[i] = hash.Eat(u).Eat(v).Eat(w);
 		}
 	}
 
 	static int hashesId = Shader.PropertyToID("_Hashes");
 	static int configId = Shader.PropertyToID("_Config");
+	static int positionsId = Shader.PropertyToID("_Positions");
 
 	[SerializeField]
 	Mesh instanceMesh;
@@ -28,45 +43,73 @@ public class HashVisualization : MonoBehaviour
 	[SerializeField]
 	Material material;
 
+	[SerializeField]
+	int seed;
+
+	[SerializeField]
+	SpaceTRS domain = new SpaceTRS
+	{
+		scale = 8f
+	};
+
 	[SerializeField, Range(1, 512)]
 	int resolution = 16;
 
+	[SerializeField, Range(-2f, 2f)]
+	float verticalOffset = 1f;
+
 	NativeArray<uint> hashes;
+	NativeArray<float3> positions;
 	GraphicsBuffer hashesBuffer;
+	GraphicsBuffer positionsBuffer;
 	MaterialPropertyBlock propertyBlock;
 
 	void OnEnable()
 	{
-		// ƒnƒbƒVƒ…’l‚É‘Î‰‚·‚é”z—ñ‚ğì¬‚·‚é
+		// ãƒãƒƒã‚·ãƒ¥å€¤ã«å¯¾å¿œã™ã‚‹é…åˆ—ã‚’ä½œæˆã™ã‚‹
 		int length = resolution * resolution;
 		hashes = new NativeArray<uint>(length, Allocator.Persistent);
+		positions = new NativeArray<float3>(length, Allocator.Persistent);
 		hashesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, length, 4);
+		positionsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, length, 3 * 4);
 
-		// Job‚ğì¬‚µ‚ÄŠ®—¹‚Ü‚Å‘Ò‹@
+		// Jobã‚’ä½œæˆã—ã¦å®Œäº†ã¾ã§å¾…æ©Ÿ
+		JobHandle handle = Shapes.Job.ScheduleParallel(positions, resolution, default);
+
 		new HashJob
 		{
-			hashes = hashes
-		}.ScheduleParallel(hashes.Length, resolution, default).Complete();
+			hashes = hashes,
+			positions = positions,
+			hash = SmallXXHash.Seed(seed),
+			domainTRS = domain.Matrix
+		}.ScheduleParallel(hashes.Length, resolution, handle).Complete();
 
-		// ‰Â‹‰»—p‚ÉGraphicsBuffer‚ÉƒnƒbƒVƒ…‚Ì’l‚ğİ’è‚µMaterialPropertyBlock‚ÉÄİ’è‚·‚éB
+		// å¯è¦–åŒ–ç”¨ã«GraphicsBufferã«ãƒãƒƒã‚·ãƒ¥ã®å€¤ã‚’è¨­å®šã—MaterialPropertyBlockã«å†è¨­å®šã™ã‚‹ã€‚
 		hashesBuffer.SetData(hashes);
+		positionsBuffer.SetData(positions);
 		propertyBlock ??= new MaterialPropertyBlock();
 		propertyBlock.SetBuffer(hashesId, hashesBuffer);
-		propertyBlock.SetVector(configId, new Vector4(resolution, 1f / resolution));
+		propertyBlock.SetBuffer(positionsId, positionsBuffer);
+		propertyBlock.SetVector(configId, new Vector4(
+			resolution, 1f / resolution, verticalOffset / resolution
+		));
 	}
 
 	private void OnDisable()
 	{
-		// Šm•Û‚µ‚Ä‚¢‚½‘Œ¹‚ÌŠm•Û
+		// ç¢ºä¿ã—ã¦ã„ãŸè³‡æºã®ç¢ºä¿
 		hashes.Dispose();
+		positions.Dispose();
 		hashesBuffer.Release();
+		positionsBuffer.Release();
 		hashesBuffer = default;
+		positionsBuffer = default;
 	}
 
 	private void OnValidate()
 	{
-		// OnValidate(Inspector‚Ì•ÏX)‚È‚Ç‚É—LŒø‚É‚È‚Á‚Ä‚¢‚éê‡‚ÍA
-		// ‘Œ¹‚ÌŠJ•ú‚ÆÄŠm•Û‚ğs‚¤B
+		// OnValidateæ™‚(Inspectorã®å¤‰æ›´æ™‚)ãªã©ã«æœ‰åŠ¹ã«ãªã£ã¦ã„ã‚‹å ´åˆã¯ã€
+		// è³‡æºã®é–‹æ”¾ã¨å†ç¢ºä¿ã‚’è¡Œã†ã€‚
 		if(hashesBuffer != default && enabled)
 		{
 			OnDisable();
@@ -76,5 +119,9 @@ public class HashVisualization : MonoBehaviour
 
 	private void Update()
 	{
+		Graphics.DrawMeshInstancedProcedural(
+			instanceMesh, 0, material, new Bounds(Vector3.zero, Vector3.one),
+			hashes.Length, propertyBlock
+		);
 	}
 }
