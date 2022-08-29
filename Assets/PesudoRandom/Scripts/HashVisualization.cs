@@ -93,7 +93,7 @@ public class HashVisualization : MonoBehaviour
 	[SerializeField, Range(1, 512)]
 	int resolution = 16;
 
-	[SerializeField, Range(-0.5f, 0.5f)]
+	[SerializeField, Range(-5f, 5f)]
 	float displacement = 0.1f;
 
 	[SerializeField]
@@ -168,7 +168,7 @@ public class HashVisualization : MonoBehaviour
 			if(vectorize)
 			{
 				// ベクトル化可能な場合
-				JobHandle handle = Shapes.Job4.ScheduleParallel(
+				JobHandle handle = Shapes.Job4<Shapes.Torus>.ScheduleParallel(
 					positions, normals, resolution, transform.localToWorldMatrix, default
 				);
 				handle.Complete();
