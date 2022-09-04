@@ -10,7 +10,7 @@ public readonly struct SmallXXHash
 
 	readonly uint accumulator;
 
-	public static implicit operator uint (SmallXXHash hash) 
+	public static implicit operator uint(SmallXXHash hash)
 	{
 		uint avalanche = hash.accumulator;
 		avalanche ^= avalanche >> 15;
@@ -24,9 +24,9 @@ public readonly struct SmallXXHash
 		new SmallXXHash(accumulator);
 	public static implicit operator SmallXXHash4(SmallXXHash hash) =>
 		new SmallXXHash4(hash.accumulator);
-	static uint RotateLeft(uint data, int steps) => 
-		(data << steps) | (data >> (32-steps));
-	
+	static uint RotateLeft(uint data, int steps) =>
+		(data << steps) | (data >> (32 - steps));
+
 	public static SmallXXHash Seed(int seed) => (uint)seed + primeE;
 
 	public SmallXXHash(uint accumulator)
@@ -52,7 +52,7 @@ public readonly struct SmallXXHash4
 
 	readonly uint4 accumulator;
 
-	public static implicit operator uint4 (SmallXXHash4 hash) 
+	public static implicit operator uint4(SmallXXHash4 hash)
 	{
 		uint4 avalanche = hash.accumulator;
 		avalanche ^= avalanche >> 15;
@@ -66,10 +66,50 @@ public readonly struct SmallXXHash4
 	public static implicit operator SmallXXHash4(uint4 accumulator) =>
 		new SmallXXHash4(accumulator);
 
-	static uint4 RotateLeft(uint4 data, int steps) => 
-		(data << steps) | (data >> (32-steps));
+	static uint4 RotateLeft(uint4 data, int steps) =>
+		(data << steps) | (data >> (32 - steps));
 
 	public static SmallXXHash4 Seed(int4 seed) => (uint4)seed + primeE;
+
+	/// <summary>
+	/// 最下位の8bitを取得する
+	/// </summary>
+	public uint4 BytesA => (uint4)this & 255;
+
+	/// <summary>
+	/// 8~15bitまでの内容を取得する
+	/// </summary>
+	public uint4 BytesB => ((uint4)this >> 8) & 255;
+
+	/// <summary>
+	/// 16~23bitまでの内容を取得する
+	/// </summary>
+	public uint4 BytesC => ((uint4)this >> 16) & 255;
+
+	/// <summary>
+	/// 24bitから31bitまでの内容を取得する
+	/// </summary>
+	public uint4 BytesD => ((uint4)this >> 24) & 255;
+
+	/// <summary>
+	/// 最下位の8bitを0~1のfloatに変換したものを取得する
+	/// </summary>
+	public float4 Floats01A => (float4)BytesA * (1f / 255f);
+
+	/// <summary>
+	/// 8~15bitを0~1のfloatに変換したものを取得する
+	/// </summary>
+	public float4 Floats01B => (float4)BytesB * (1f / 255f);
+
+	/// <summary>
+	/// 16~23bitを0~1のfloatに変換したものを取得する
+	/// </summary>
+	public float4 Floats01C => (float4)BytesC * (1f / 255f);
+
+	/// <summary>
+	/// 24~31bitを0~1のfloatに変換したものを取得する
+	/// </summary>
+	public float4 Floats01D => (float4)BytesD * (1f / 255f);
 
 	public SmallXXHash4(uint4 accumulator)
 	{
