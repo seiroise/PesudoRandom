@@ -89,7 +89,7 @@ public readonly struct SmallXXHash4
 	/// <summary>
 	/// 24bitから31bitまでの内容を取得する
 	/// </summary>
-	public uint4 BytesD => ((uint4)this >> 24) & 255;
+	public uint4 BytesD => (uint4)this >> 24;
 
 	/// <summary>
 	/// 最下位の8bitを0~1のfloatに変換したものを取得する

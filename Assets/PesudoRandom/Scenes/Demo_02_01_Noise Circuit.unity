@@ -404,11 +404,11 @@ MonoBehaviour:
   instanceMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
   material: {fileID: 2100000, guid: e8cf90b64ef08d748af1d09d10a586d3, type: 2}
   resolution: 128
-  displacement: 5
-  instanceScale: 1
-  shape: 0
-  noiseType: 1
-  dimensions: 1
+  displacement: 100
+  instanceScale: 2
+  shape: 2
+  noiseType: 0
+  dimensions: 3
   seed: 0
   domain:
     translation:
@@ -420,9 +420,9 @@ MonoBehaviour:
       y: 0
       z: 0
     scale:
-      x: 8
-      y: 8
-      z: 8
+      x: 32
+      y: 32
+      z: 32
 --- !u!114 &1451115237
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -430,10 +430,10 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1451115233}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6e503add6e372148ad6c530afb386da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _axis: {x: 1, y: 1, z: 0}
-  _rotationSpeed: 30
+  _rotationSpeed: 10
