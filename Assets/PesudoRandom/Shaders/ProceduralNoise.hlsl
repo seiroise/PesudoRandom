@@ -18,7 +18,7 @@ void ConfigureProcedural()
 	unity_ObjectToWorld._m03_m13_m23 += 
 		_Config.z * _Noise[unity_InstanceID] * _Normals[unity_InstanceID];
 	// 拡大縮小
-	unity_ObjectToWorld._m00_m11_m22 = _Config.y;
+	unity_ObjectToWorld._m00_m11_m22 = _Config.y;// *_Noise[unity_InstanceID];
 #endif
 }
 
@@ -42,4 +42,22 @@ void ShaderGraphFunction_half(half3 In, out half3 Out, out half3 Color)
 {
 	Out = In;
 	Color = GetNoiseColor();
+}
+
+void GetNoise_float(out float Out)
+{
+#if defined(UNITY_PROCEDURAL_INSTANCING_ENABLED)	
+	Out = _Noise[unity_InstanceID];
+#else
+	Out = 0.0;
+#endif
+}
+
+void GetNoise_half(out half Out)
+{
+#if defined(UNITY_PROCEDURAL_INSTANCING_ENABLED)
+	Out = _Noise[unity_InstanceID];
+#else
+	Out = 0.0;
+#endif
 }

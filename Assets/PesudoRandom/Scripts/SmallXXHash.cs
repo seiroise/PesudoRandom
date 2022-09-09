@@ -69,6 +69,9 @@ public readonly struct SmallXXHash4
 	static uint4 RotateLeft(uint4 data, int steps) =>
 		(data << steps) | (data >> (32 - steps));
 
+	public static SmallXXHash4 operator +(SmallXXHash4 h, int v) =>
+		h.accumulator + (uint)v;
+
 	public static SmallXXHash4 Seed(int4 seed) => (uint4)seed + primeE;
 
 	/// <summary>
@@ -110,6 +113,24 @@ public readonly struct SmallXXHash4
 	/// 24~31bitを0~1のfloatに変換したものを取得する
 	/// </summary>
 	public float4 Floats01D => (float4)BytesD * (1f / 255f);
+
+	/// <summary>
+	/// 任意のbit列を取得する。
+	/// </summary>
+	/// <param name="count">取得するbit値の桁数</param>
+	/// <param name="shift">取得するbit値の位置</param>
+	/// <returns></returns>
+	public uint4 GetBits(int count, int shift) =>
+		((uint4)this >> shift) & (uint)((1 << count) - 1);
+
+	/// <summary>
+	/// 任意のbit列を[0,1]のfloatに変換したものを取得する。
+	/// </summary>
+	/// <param name="count">取得するbit値の桁数</param>
+	/// <param name="shift">取得するbit値の位置</param>
+	/// <returns></returns>
+	public float4 GetBitsAsFloats01(int count, int shift) =>
+		(float4)GetBits(count, shift) * (1f / ((1 << count) - 1));
 
 	public SmallXXHash4(uint4 accumulator)
 	{

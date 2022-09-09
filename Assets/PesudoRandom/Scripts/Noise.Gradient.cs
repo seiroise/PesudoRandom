@@ -12,6 +12,63 @@ public partial class Noise
 		float4 Evaluate(SmallXXHash4 hash, float4 x);
 		float4 Evaluate(SmallXXHash4 hash, float4 x, float4 y);
 		float4 Evaluate(SmallXXHash4 hash, float4 x, float4 y, float4 z);
+		float4 EvaluateAfterInterpolation(float4 value);
+	}
+
+	/// <summary>
+	/// 最終的な評価値を絶対値にして返す。
+	/// Ken PerlinがこのパターンをTurbulence(乱流)と呼んだことに由来
+	/// </summary>
+	/// <typeparam name="G"></typeparam>
+	public struct Turbulence<G> : IGradient where G : struct, IGradient
+	{
+		public float4 Evaluate(SmallXXHash4 hash, float4 x)
+		{
+			return default(G).Evaluate(hash, x);
+		}
+
+		public float4 Evaluate(SmallXXHash4 hash, float4 x, float4 y)
+		{
+			return default(G).Evaluate(hash, x, y);
+		}
+
+		public float4 Evaluate(SmallXXHash4 hash, float4 x, float4 y, float4 z)
+		{
+			return default(G).Evaluate(hash, x, y, z);
+		}
+
+		public float4 EvaluateAfterInterpolation(float4 value)
+		{
+			return abs(default(G).EvaluateAfterInterpolation(value));
+		}
+	}
+
+	/// <summary>
+	/// 二乗を返す
+	/// </summary>
+	/// <typeparam name="G"></typeparam>
+	public struct Power2<G> : IGradient where G : struct, IGradient
+	{
+		public float4 Evaluate(SmallXXHash4 hash, float4 x)
+		{
+			return default(G).Evaluate(hash, x);
+		}
+
+		public float4 Evaluate(SmallXXHash4 hash, float4 x, float4 y)
+		{
+			return default(G).Evaluate(hash, x, y);
+		}
+
+		public float4 Evaluate(SmallXXHash4 hash, float4 x, float4 y, float4 z)
+		{
+			return default(G).Evaluate(hash, x, y, z);
+		}
+
+		public float4 EvaluateAfterInterpolation(float4 value)
+		{
+			float4 v = default(G).EvaluateAfterInterpolation(value);
+			return v * v;
+		}
 	}
 
 	/// <summary>
@@ -21,6 +78,7 @@ public partial class Noise
 	{
 		public float4 Evaluate(SmallXXHash4 hash, float4 x)
 		{
+			// valueノイズの場合は値に関わらず常に定数を返す。
 			return hash.Floats01A * 2f - 1f;
 		}
 
@@ -32,6 +90,11 @@ public partial class Noise
 		public float4 Evaluate(SmallXXHash4 hash, float4 x, float4 y, float4 z)
 		{
 			return hash.Floats01A * 2f - 1f;
+		}
+
+		public float4 EvaluateAfterInterpolation(float4 value)
+		{
+			return value;
 		}
 	}
 
@@ -65,6 +128,11 @@ public partial class Noise
 			gx += select(-offset, offset, gx < 0f);
 			gy += select(-offset, offset, gy < 0f);
 			return (gx * x + gy * y + gz * z) * (1f / 0.56290f);
+		}
+
+		public float4 EvaluateAfterInterpolation(float4 value)
+		{
+			return value;
 		}
 	}
 }
